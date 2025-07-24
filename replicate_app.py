@@ -79,6 +79,11 @@ with st.form(key='image_form'):
         placeholder="z.B. Ein Foto eines Astronauten, der auf einem Pferd reitet",
         key="prompt_input"
     )
+    aspect_ratio = st.selectbox(
+        "Seitenverhältnis auswählen",
+        ("4:3", "3:4", "16:9", "9:16", "1:1"),
+        index=0, # Standardwert ist 4:3
+    )
     submit_button = st.form_submit_button(label='✨ Bild erzeugen')
 
 # Wenn der Button geklickt und eine Beschreibung eingegeben wurde
@@ -86,18 +91,24 @@ if submit_button and prompt:
     st.markdown("---")
     with st.spinner("KI-Magie wird gewirkt... das kann einen Moment dauern..."):
         try:
-            # Das zu verwendende Modell. Mehr Modelle findest du auf replicate.com/explore
-            model_id = "stability-ai/stable-diffusion:db21e45d3f7023abc2a46ee38a23973f6dce16bb082a930b0c49861f96d1e5bf"
+            # Das zu verwendende Modell: Google Imagen 4 Fast
+            model_id = "google/imagen-4-fast"
 
             # Das Modell ausführen
             output = replicate.run(
                 model_id,
-                input={"prompt": prompt}
+                input={
+                    "prompt": prompt,
+                    "aspect_ratio": aspect_ratio,
+                    "output_format": "jpg",
+                    "safety_filter_level": "block_only_high"
+                }
             )
 
             # Das Bild anzeigen
             if output:
-                image_url = output[0]
+                # Das Imagen-Modell gibt ein Objekt zurück, wir rufen die URL mit .url() ab
+                image_url = output.url()
                 st.image(image_url, caption=f"Dein generiertes Bild für: '{prompt}'", use_column_width=True)
             else:
                 st.error("Es tut mir leid, ich konnte kein Bild erzeugen. Bitte versuche es mit einer anderen Beschreibung.")
@@ -112,4 +123,4 @@ else:
         st.warning("Bitte gib eine Beschreibung für das Bild ein, das du erstellen möchtest.")
 
 st.markdown("---")
-st.info("Diese App verwendet das `stable-diffusion` Modell von Stability AI über die Replicate API.")
+st.info("Diese App verwendet das `google/imagen-4-fast` Modell über die Replicate API.")
