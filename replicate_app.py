@@ -107,9 +107,8 @@ if submit_button and prompt:
 
             # Das Bild anzeigen
             if output:
-                # Das Modell gibt ein FileOutput-Objekt zurück. Wir extrahieren die URL mit der .url() Methode.
-                # Dies ist der korrekte Weg, um den Fehler "'FileOutput' object has no attribute 'format'" zu beheben.
-                image_url = output.url()
+                # Für dieses Modell gibt replicate.run() die URL direkt als String zurück.
+                image_url = output
                 st.image(image_url, caption=f"Dein generiertes Bild für: '{prompt}'", use_container_width=True)
             else:
                 st.error("Es tut mir leid, ich konnte kein Bild erzeugen. Bitte versuche es mit einer anderen Beschreibung.")
