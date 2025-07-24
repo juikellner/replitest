@@ -107,8 +107,15 @@ if submit_button and prompt:
 
             # Das Bild anzeigen
             if output:
-                # Die Fehlermeldung zeigt, dass replicate.run() die URL direkt als String zurückgibt.
-                image_url = output
+                # Robuste Handhabung für den Rückgabewert der Replicate API.
+                # Manchmal gibt sie einen String zurück, manchmal ein Objekt.
+                # Dieser Code prüft den Typ und extrahiert die URL korrekt.
+                if isinstance(output, str):
+                    image_url = output
+                else:
+                    # Wenn es kein String ist, nehmen wir an, es ist ein Objekt
+                    # mit einer .url() Methode, wie im Schema beschrieben.
+                    image_url = output.url()
                 st.image(image_url, caption=f"Dein generiertes Bild für: '{prompt}'", use_container_width=True)
             else:
                 st.error("Es tut mir leid, ich konnte kein Bild erzeugen. Bitte versuche es mit einer anderen Beschreibung.")
