@@ -159,15 +159,11 @@ if submit_button and prompt:
 
             # ComfyUI gibt eine Liste zurück, wir nehmen das erste Element.
             if comfy_output and isinstance(comfy_output, list) and comfy_output[0]:
-                # Laut dem Modell-Schema gibt die API eine Liste von Objekten zurück.
-                # Wir greifen auf das erste Element zu und rufen .url() auf, um die URL zu erhalten.
+                # Gemäß dem Hinweis des Benutzers ist die explizite Konvertierung
+                # zu einem String der korrekte Weg, um die URL aus dem
+                # zurückgegebenen API-Objekt zu extrahieren.
                 result_item = comfy_output[0]
-                # Finale, robuste Lösung: Wir versuchen .url() aufzurufen. Wenn das fehlschlägt,
-                # weil das Ergebnis bereits ein String ist, fangen wir den Fehler ab.
-                try:
-                    image_url = result_item.url()
-                except AttributeError:
-                    image_url = result_item
+                image_url = str(result_item)
                 st.image(image_url, caption=f"Generiert für: '{prompt}'", use_container_width=True)
             else:
                 st.warning("Kein Ergebnis vom ComfyUI Workflow erhalten.")
