@@ -107,8 +107,9 @@ if submit_button and prompt:
 
             # Das Bild anzeigen
             if output:
-                # Für dieses Modell gibt replicate.run() die URL direkt als String zurück.
-                image_url = output
+                # Gemäß dem Modell-Schema gibt replicate.run() ein Objekt zurück.
+                # Wir rufen .url() auf, um die URL-Zeichenkette für st.image() zu erhalten.
+                image_url = output.url()
                 st.image(image_url, caption=f"Dein generiertes Bild für: '{prompt}'", use_container_width=True)
             else:
                 st.error("Es tut mir leid, ich konnte kein Bild erzeugen. Bitte versuche es mit einer anderen Beschreibung.")
