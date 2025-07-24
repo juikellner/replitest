@@ -132,12 +132,33 @@ with st.form(key='image_form'):
         placeholder="z.B. Ein Foto eines Astronauten, der auf einem Pferd reitet",
         key="prompt_input"
     )
+
+    st.markdown("---")
+    st.markdown("##### Einstellungen für Google Imagen")
     aspect_ratio = st.selectbox(
-        "Seitenverhältnis (nur für Google Imagen)",
+        "Seitenverhältnis",
         ("4:3", "3:4", "16:9", "9:16", "1:1"),
         index=0, # Standardwert ist 4:3
+        key="aspect_google"
     )
-    submit_button = st.form_submit_button(label='✨ Bilder erzeugen')
+
+    st.markdown("---")
+    st.markdown("##### Einstellungen für PrunaAI Flux.1 Dev")
+    guidance_flux = st.slider(
+        "Guidance", min_value=1.0, max_value=10.0, value=3.5, step=0.1
+    )
+    steps_flux = st.slider(
+        "Inference Steps", min_value=10, max_value=50, value=28, step=1
+    )
+    speed_mode_flux = st.selectbox(
+        "Speed Mode",
+        ("Extra Juiced 🔥 (more speed)", "Juiced ⚡️ (speed)", "Max Juiced 🚀 (max speed)"),
+        index=0
+    )
+    aspect_ratio_flux = st.selectbox(
+        "Seitenverhältnis", ("1:1", "4:5", "16:9", "9:16", "3:4", "4:3"), index=0, key="aspect_flux"
+    )
+    submit_button = st.form_submit_button(label='✨ Alle Bilder erzeugen')
 
 # Wenn der Button geklickt und eine Beschreibung eingegeben wurde
 if submit_button and prompt:
@@ -169,10 +190,24 @@ if submit_button and prompt:
                 }
             )
 
+            # --- Modell 3: PrunaAI Flux.1 Dev ---
+            st.write("3. Erzeuge Bild mit PrunaAI Flux.1 Dev...")
+            flux_output = replicate.run(
+                "prunaai/flux.1-dev:970a966e3a5d8aa9a4bf13d395cf49c975dc4726e359f982fb833f9b100f75d5",
+                input={
+                    "prompt": prompt,
+                    "guidance": guidance_flux,
+                    "num_inference_steps": steps_flux,
+                    "speed_mode": speed_mode_flux,
+                    "aspect_ratio": aspect_ratio_flux,
+                    "output_format": "jpg",
+                }
+            )
+
             # --- Ergebnisse anzeigen ---
             st.markdown("---")
             st.subheader("Ihre generierten Bilder")
-            col1, col2 = st.columns(2)
+            col1, col2, col3 = st.columns(3)
 
             with col1:
                 st.markdown("#### Google Imagen")
@@ -193,6 +228,14 @@ if submit_button and prompt:
                     st.image(image_url_2, use_container_width=True)
                 else:
                     st.warning("Kein Ergebnis vom ComfyUI Workflow erhalten.")
+            
+            with col3:
+                st.markdown("#### PrunaAI Flux")
+                if flux_output:
+                    image_url_3 = str(flux_output)
+                    st.image(image_url_3, use_container_width=True)
+                else:
+                    st.warning("Kein Ergebnis von PrunaAI Flux erhalten.")
 
         except replicate.exceptions.ReplicateError as e:
             st.error(f"Fehler bei der Kommunikation mit Replicate: {e}")
@@ -204,4 +247,4 @@ else:
         st.warning("Bitte gib eine Beschreibung für das Bild ein, das du erstellen möchtest.")
 
 st.markdown("---")
-st.info("Diese App verwendet die Modelle `google/imagen-4-fast` und `fofr/any-comfyui-workflow` über die Replicate API.")
+st.info("Diese App verwendet die Modelle `Google Imagen`, `ComfyUI Workflow` und `PrunaAI Flux` über die Replicate API.")
