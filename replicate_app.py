@@ -132,12 +132,6 @@ with st.form(key='image_form'):
         placeholder="z.B. Ein Foto eines Astronauten, der auf einem Pferd reitet",
         key="prompt_input"
     )
-    aspect_ratio = st.selectbox(
-        "Seitenverhältnis auswählen",
-        ("4:3", "3:4", "16:9", "9:16", "1:1"),
-        index=0, # Standardwert ist 4:3
-    )
-    st.info("Hinweis: Die Auswahl des Seitenverhältnisses gilt nur für das Google Imagen-Modell.", icon="ℹ️")
     submit_button = st.form_submit_button(label='✨ Bild erzeugen')
 
 # Wenn der Button geklickt und eine Beschreibung eingegeben wurde
@@ -145,27 +139,11 @@ if submit_button and prompt:
     st.markdown("---")
     with st.spinner("KI-Magie wird gewirkt... das kann einen Moment dauern..."):
         try:
-            # --- Modell 1: Google Imagen ---
-            st.write("1. Erzeuge Bild mit Google Imagen...")
-            imagen_input = {
-                "prompt": prompt,
-                "aspect_ratio": aspect_ratio,
-                "output_format": "jpg",
-                "safety_filter_level": "block_only_high"
-            }
-            imagen_output = replicate.run("google/imagen-4-fast", input=imagen_input)
-
-            # --- Modell 2: ComfyUI Workflow ---
-            st.write("2. Erzeuge Bild mit ComfyUI Workflow...")
+            # --- ComfyUI Workflow ausführen ---
             # Erstelle eine Kopie des Templates und füge den User-Prompt ein
             comfy_workflow = COMFY_WORKFLOW_TEMPLATE.copy()
             comfy_workflow['6']['inputs']['text'] = prompt
-            
-            comfy_input = {
-                "workflow_json": json.dumps(comfy_workflow),
-                "output_format": "webp",
-                "randomise_seeds": True,
-            }
+
             comfy_output = replicate.run(
                 "fofr/any-comfyui-workflow:f552cf6bb263b2c7c547c3c7fb158aa4309794934bedc16c9aa395bee407744d",
                 input={
@@ -177,30 +155,17 @@ if submit_button and prompt:
 
             # --- Ergebnisse anzeigen ---
             st.markdown("---")
-            st.subheader("Ihre generierten Bilder")
-            col1, col2 = st.columns(2)
+            st.subheader("Ihr generiertes Bild")
 
-            with col1:
-                st.markdown("#### Google Imagen")
-                if imagen_output:
-                    # Robuste URL-Extraktion für Imagen
-                    try: image_url_1 = imagen_output.url()
-                    except (AttributeError, TypeError): image_url_1 = imagen_output
-                    st.image(image_url_1, use_container_width=True)
-                else:
-                    st.warning("Kein Ergebnis von Google Imagen erhalten.")
-            
-            with col2:
-                st.markdown("#### ComfyUI Workflow")
-                # ComfyUI gibt eine Liste zurück, wir nehmen das erste Element.
-                if comfy_output and isinstance(comfy_output, list) and comfy_output[0]:
-                    # Robuste URL-Extraktion für das Listenelement
-                    result_item = comfy_output[0]
-                    try: image_url_2 = result_item.url()
-                    except (AttributeError, TypeError): image_url_2 = result_item
-                    st.image(image_url_2, use_container_width=True)
-                else:
-                    st.warning("Kein Ergebnis vom ComfyUI Workflow erhalten.")
+            # ComfyUI gibt eine Liste zurück, wir nehmen das erste Element.
+            if comfy_output and isinstance(comfy_output, list) and comfy_output[0]:
+                # Robuste URL-Extraktion für das Listenelement
+                result_item = comfy_output[0]
+                try: image_url = result_item.url()
+                except (AttributeError, TypeError): image_url = result_item
+                st.image(image_url, caption=f"Generiert für: '{prompt}'", use_container_width=True)
+            else:
+                st.warning("Kein Ergebnis vom ComfyUI Workflow erhalten.")
 
         except replicate.exceptions.ReplicateError as e:
             st.error(f"Fehler bei der Kommunikation mit Replicate: {e}")
@@ -212,4 +177,4 @@ else:
         st.warning("Bitte gib eine Beschreibung für das Bild ein, das du erstellen möchtest.")
 
 st.markdown("---")
-st.info("Diese App verwendet die Modelle `google/imagen-4-fast` und `fofr/any-comfyui-workflow` über die Replicate API.")
+st.info("Diese App verwendet das `fofr/any-comfyui-workflow` Modell über die Replicate API.")
